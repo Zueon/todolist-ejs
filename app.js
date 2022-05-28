@@ -3,7 +3,8 @@ const bodyParser = require('body-parser');
 
 const app = express();
 
-const items = ['todo1', 'todo2', 'todo3'];
+const items = [];
+const workItems = [];
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -19,13 +20,27 @@ app.get('/', (req, res) => {
 
   let day = today.toLocaleDateString('en-US', options);
 
-  res.render('list', { day, items });
+  res.render('list', { listTitle: day, newItems: items });
 });
 
 app.post('/', (req, res) => {
   const item = req.body.newItem;
   items.push(item);
   res.redirect('/');
+});
+
+app.get('/work', (req, res) => {
+  res.render('list', { listTitle: 'Work List', newItems: workItems });
+});
+
+app.post('/work', (req, res) => {
+  const item = req.body.newItem;
+  workItems.push(item);
+  res.redirect('/work');
+});
+
+app.get('/about', (req, res) => {
+  res.render('about');
 });
 
 app.listen(3000, () => {
