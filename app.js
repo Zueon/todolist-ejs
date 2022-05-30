@@ -5,8 +5,6 @@ const { redirect } = require('express/lib/response');
 const _ = require('lodash');
 const app = express();
 
-const workItems = [];
-
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
@@ -18,7 +16,7 @@ const itemsSchema = {
 };
 
 const Item = mongoose.model('Item', itemsSchema);
-const item1 = new Item({ name: 'todo list using mongoose!' });
+const item1 = new Item({ name: 'TODO List using mongoose!' });
 const item2 = new Item({ name: 'Hit the + button to add a new item' });
 const item3 = new Item({ name: 'Hit the checkbox to delete an item' });
 
@@ -32,8 +30,8 @@ const listSchema = {
 const List = mongoose.model('List', listSchema);
 
 app.get('/', (req, res) => {
-  Item.find({}, (err, docs) => {
-    if (docs.length == 0) {
+  Item.find({}, (err, foundItems) => {
+    if (foundItems.length == 0) {
       Item.insertMany(defaultItems, (err) => {
         if (err) {
           console.log('Error');
@@ -43,32 +41,36 @@ app.get('/', (req, res) => {
       });
       res.redirect('/');
     } else {
-      res.render('list', { listTitle: 'Today', newItems: docs });
+      res.render('list', { listTitle: 'Today', newListItems: foundItems });
     }
   });
 });
 
-app.get('/:customListName', (req, res) => {
-  const customListName = _.capitalize(req.params.customListName);
-  List.findOne({ name: customListName }, (err, foundList) => {
-    if (!err) {
-      if (!foundList) {
-        const list = new List({ name: customListName, items: defaultItems });
-        list.save();
-      } else {
-        res.render('list', {
-          listTitle: foundList.name,
-          newItems: foundList.items,
-        });
+app.get('/:customListName', function (req, res) {
+  if (req.params.name != 'favicon.ico') {
+    const customListName = _.capitalize(req.params.customListName);
+
+    List.findOne({ name: customListName }, (err, foundList) => {
+      if (!err) {
+        if (!foundList) {
+          const list = new List({ name: customListName, items: defaultItems });
+          list.save();
+          res.redirect('/' + customListName);
+        } else {
+          res.render('list', {
+            listTitle: foundList.name,
+            newListItems: foundList.items,
+          });
+        }
       }
-    }
-  });
+    });
+  }
 });
 
 app.post('/', (req, res) => {
-  const input = req.body.newItem;
+  const itemName = req.body.newItem;
   const listName = req.body.list;
-  const item = new Item({ name: input });
+  const item = new Item({ name: itemName });
 
   if (listName === 'Today') {
     item.save();
@@ -86,7 +88,7 @@ app.post('/delete', (req, res) => {
   const checkedId = req.body.checkbox;
   const listName = req.body.listName;
 
-  if (listName === 'Today') {
+  if (listName == 'Today') {
     Item.findByIdAndRemove(checkedId, (err) => {
       if (!err) {
         console.log('error!');
@@ -97,23 +99,19 @@ app.post('/delete', (req, res) => {
     List.findOneAndUpdate(
       { name: listName },
       { $pull: { items: { _id: checkedId } } },
-      (err) => {
-        if (!err) res.redirect('/' + listName);
+      (err, foundList) => {
+        if (!err) {
+          res.redirect('/' + listName);
+        }
       }
     );
   }
-});
-
-app.post('/work', (req, res) => {
-  const item = req.body.newItem;
-  workItems.push(item);
-  res.redirect('/work');
 });
 
 app.get('/about', (req, res) => {
   res.render('about');
 });
 
-app.listen(3000, () => {
+app.listen(8080, () => {
   console.log('Server is running on port 3000');
 });
