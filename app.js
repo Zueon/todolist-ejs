@@ -4,12 +4,17 @@ const mongoose = require('mongoose');
 const { redirect } = require('express/lib/response');
 const _ = require('lodash');
 const app = express();
+require('dotenv').config();
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-mongoose.connect('mongodb://localhost:27017/todolistDB');
+mongoose.connect(
+  'mongodb+srv://jueon-admin:' +
+    process.env.MONGODB_ADMIN_PW +
+    '@cluster0.g2eem.mongodb.net/todolistDB'
+);
 
 const itemsSchema = {
   name: String,
