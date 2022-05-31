@@ -3,13 +3,19 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const { redirect } = require('express/lib/response');
 const _ = require('lodash');
+require('dotenv').config();
+
 const app = express();
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-mongoose.connect('mongodb://localhost:27017/todolistDB');
+mongoose.connect(
+  'mongodb+srv://jueon-admin:' +
+    process.env.MONGODB_ADMIN_PW +
+    '@cluster0.g2eem.mongodb.net/todolistDB'
+);
 
 const itemsSchema = {
   name: String,
@@ -47,7 +53,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/:customListName', function (req, res) {
-  if (req.params.name != 'favicon.ico') {
+  if (req.params.name != 'Favicon.ico') {
     const customListName = _.capitalize(req.params.customListName);
 
     List.findOne({ name: customListName }, (err, foundList) => {
@@ -113,5 +119,5 @@ app.get('/about', (req, res) => {
 });
 
 app.listen(8080, () => {
-  console.log('Server is running on port 3000');
+  console.log('Server is running on port 8080');
 });
